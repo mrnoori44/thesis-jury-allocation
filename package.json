@@ -7,11 +7,42 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "lint": "eslint --ext .js,.ts,.vue .",
+    "format": "prettier --write .",
+    "test:e2e": "playwright test"
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+  }},
+  "lint-staged": {
+    "*.{js,ts,vue}": [
+      "eslint --fix",
+      "prettier --write"
+  ],
+    "*.{css,scss}": [
+      "prettier --write"
+  ]
+},
   "dependencies": {
+    "@supabase/supabase-js": "^2.57.2",
+    "dayjs": "^1.11.18",
     "nuxt": "^4.1.1",
+    "pinia": "^3.0.3",
     "vue": "^3.5.20",
     "vue-router": "^4.5.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "autoprefixer": "^10.4.21",
+    "eslint": "^9.35.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-vue": "^10.4.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.6",
+    "postcss": "^8.5.6",
+    "prettier": "^3.6.2",
+    "tailwindcss": "^4.1.13"
   }
 }
