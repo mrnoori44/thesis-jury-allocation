@@ -1,3 +1,4 @@
+/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
     './components/**/*.{vue,js,ts}',
@@ -5,9 +6,15 @@ module.exports = {
     './pages/**/*.vue',
     './app.vue',
     './composables/**/*.{js,ts}',
+    './plugins/**/*.{js,ts}',
+    './content/**/*.{md,json}'
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ["VazirMatn", "sans-serif"], // overrides default
+      },
+    },
   },
   plugins: [],
 }
