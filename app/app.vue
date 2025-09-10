@@ -1,9 +1,6 @@
 <template>
   <div>
-    <UApp>
-      <NuxtPage />
-    </UApp>
+    <NuxtPage />
   </div>
 </template>
-<script setup>
-</script>
+<script setup></script>
