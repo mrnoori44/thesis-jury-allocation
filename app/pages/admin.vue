@@ -11,30 +11,32 @@
         <div v-if="loading" class="py-10 text-center">در حال بارگذاری...</div>
 
         <div v-else>
-          <table v-if="pending.length" class="w-full table-auto text-right">
+          <table v-if="requests.length" class="w-full table-auto text-right">
             <thead>
               <tr class="text-sm text-gray-500 border-b">
                 <th class="py-2 px-3">نام کامل</th>
                 <th class="py-2 px-3">شماره دانشجویی</th>
+                <th class="py-2 px-3">ایمیل</th>
                 <th class="py-2 px-3">تاریخ ثبت‌نام</th>
                 <th class="py-2 px-3">عملیات</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="p in pending" :key="p.id" class="hover:bg-gray-50">
-                <td class="py-3 px-3">{{ p.full_name || "—" }}</td>
-                <td class="py-3 px-3">{{ p.student_number || "—" }}</td>
-                <td class="py-3 px-3">{{ formatDate(p.created_at) }}</td>
+              <tr v-for="r in requests" :key="`req-${r.id}`" class="hover:bg-gray-50">
+                <td class="py-3 px-3">{{ r.full_name || "—" }}</td>
+                <td class="py-3 px-3">{{ r.student_number || "—" }}</td>
+                <td class="py-3 px-3 text-sm text-gray-700">{{ r.email }}</td>
+                <td class="py-3 px-3">{{ formatDate(r.created_at) }}</td>
                 <td class="py-3 px-3">
                   <div class="flex gap-2 justify-end">
                     <button
-                      @click="approve(p.id)"
+                      @click="approveRequest(r.id)"
                       class="px-3 py-1 rounded bg-green-600 text-white text-sm"
                     >
                       تایید
                     </button>
                     <button
-                      @click="reject(p.id)"
+                      @click="rejectRequest(r.id)"
                       class="px-3 py-1 rounded bg-red-500 text-white text-sm"
                     >
                       رد
@@ -58,8 +60,10 @@
           <div class="text-2xl font-bold mt-2">{{ stats.totalUsers ?? "—" }}</div>
         </div>
         <div class="bg-white shadow rounded p-4">
-          <div class="text-sm text-gray-500">دانشجویان معوق</div>
-          <div class="text-2xl font-bold mt-2">{{ stats.pendingStudents ?? "—" }}</div>
+          <div class="text-sm text-gray-500">درخواست‌های معوق</div>
+          <div class="text-2xl font-bold mt-2">
+            {{ stats.pendingStudents ?? requests.length ?? "—" }}
+          </div>
         </div>
         <div class="bg-white shadow rounded p-4">
           <div class="text-sm text-gray-500">اساتید</div>
@@ -69,16 +73,28 @@
     </div>
   </div>
 </template>
+
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 
-const pending = ref<Array<any>>([]);
+type RequestRow = {
+  id: number;
+  email: string;
+  full_name: string | null;
+  student_number: string | null;
+  user_id: string | null;
+  status: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
+const requests = ref<RequestRow[]>([]);
 const loading = ref(true);
 const stats = ref<any>({});
 const router = useRouter();
 
-function formatDate(iso?: string) {
+function formatDate(iso?: string | null) {
   if (!iso) return "—";
   const d = new Date(iso);
   return d.toLocaleString("fa-IR");
@@ -87,38 +103,53 @@ function formatDate(iso?: string) {
 async function fetchPending() {
   loading.value = true;
   try {
-    const res = await $fetch<{ pending?: any[]; stats?: any }>("/api/admin/pending");
-    pending.value = res.pending ?? [];
+    // Backend returns { requests, stats }
+    const res = await $fetch<{ requests?: RequestRow[]; stats?: any }>(
+      "/api/admin/pending"
+    );
+    requests.value = res.requests ?? [];
     stats.value = res.stats ?? {};
   } catch (e) {
     console.error("failed to load pending", e);
-    // optional: show toast
+    // you can show a toast or notification
   } finally {
     loading.value = false;
   }
 }
 
-async function approve(id: string) {
+/*
+ * Approve a signup request or profile:
+ * - The backend accepts either a numeric signup_requests.id or a profiles.id.
+ * - Here we send the request id (numeric) which is the usual case from admin list.
+ */
+async function approveRequest(id: number | string) {
   if (!confirm("آیا مطمئن هستید که می‌خواهید این حساب را تایید کنید؟")) return;
   try {
     await $fetch("/api/admin/approve", { method: "POST", body: { id } });
     await fetchPending();
-    alert("حساب تایید شد و ایمیل اطلاع‌رسانی ارسال شد.");
-  } catch (e) {
+    alert("حساب تایید شد.");
+  } catch (e: any) {
     console.error(e);
-    alert("خطا در تایید حساب");
+    // show more informative error if available
+    const msg = e?.data?.statusMessage || e?.message || "خطا در تایید حساب";
+    alert(msg);
   }
 }
 
-async function reject(id: string) {
+/*
+ * Reject a signup request or profile.
+ * If request has no linked user_id, backend will mark request rejected.
+ */
+async function rejectRequest(id: number | string) {
   const reason = prompt("علت رد را وارد کنید (اختیاری):");
   try {
     await $fetch("/api/admin/reject", { method: "POST", body: { id, reason } });
     await fetchPending();
     alert("حساب رد شد.");
-  } catch (e) {
+  } catch (e: any) {
     console.error(e);
-    alert("خطا در رد حساب");
+    const msg = e?.data?.statusMessage || e?.message || "خطا در رد حساب";
+    alert(msg);
   }
 }
 
@@ -126,6 +157,7 @@ onMounted(() => {
   fetchPending();
 });
 </script>
+
 <style scoped>
 .rtl {
   direction: rtl;

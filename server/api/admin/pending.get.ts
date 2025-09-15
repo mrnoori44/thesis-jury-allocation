@@ -1,47 +1,53 @@
 // server/api/admin/pending.get.ts
 import { defineEventHandler, createError } from 'h3'
-import { serverSupabaseClient, serverSupabaseServiceRole } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseServiceRole , serverSupabaseUser } from '#supabase/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '../../../types/database.types' // adjust path if needed
 
 export default defineEventHandler(async (event) => {
-  // client bound to the incoming request (reads session cookie)
-  const supabase = await serverSupabaseClient(event)
-
-  // 1) get current authenticated user from the request
-  const { data: userData, error: userErr } = await supabase.auth.getUser()
-  if (userErr || !userData?.user) {
+  // 1) Trust Nuxt’s helper to read the auth cookies
+  const user = await serverSupabaseUser(event)
+  if (!user) {
     throw createError({ statusCode: 401, statusMessage: 'Unauthenticated' })
   }
-  const userId = userData.user.id
 
-  // 2) ensure the caller is an approved admin (can read own profile)
-  const { data: callerProfile, error: profileErr } = await supabase
+  // 2) Use a user-scoped client (RLS enforced)
+  const supabase = await serverSupabaseClient<Database>(event)
+
+  // 3) Your existing admin check (example)
+  const { data: profile, error: profileErr } = await supabase
     .from('profiles')
-    .select('role,approved')
-    .eq('id', userId)
-    .single<{ role: string; approved: boolean }>()
+    .select('role, approved')
+    .eq('id', user.id)
+    .maybeSingle()
 
-  if (profileErr || !callerProfile || callerProfile.role !== 'admin' || !callerProfile.approved) {
+  if (profileErr) throw createError({ statusCode: 500, statusMessage: profileErr.message })
+  if (!profile || profile.role !== 'admin' || !profile.approved) {
     throw createError({ statusCode: 403, statusMessage: 'Forbidden: admin only' })
   }
+  // privileged client (service role) to bypass RLS for fetching signup requests
+  const admin = serverSupabaseServiceRole(event) as unknown as SupabaseClient<Database>
 
-  // 3) run privileged queries using the service-role client (bypass RLS)
-  const admin = serverSupabaseServiceRole(event)
+  // typed statuses (matches Database union)
+  const pendingStatuses: Database['public']['Tables']['signup_requests']['Row']['status'][] = [
+    'pending_confirmation',
+    'requested'
+  ]
 
-  const { data: pending, error } = await admin
-    .from('profiles')
-    .select('id,full_name,student_number,created_at')
-    .eq('role', 'student')
-    .eq('approved', false)
+  const { data: requests, error: reqErr } = await admin
+    .from('signup_requests')
+    .select('id, email, full_name, student_number, user_id, status, created_at, updated_at')
+    .in('status', pendingStatuses)
     .order('created_at', { ascending: false })
 
-  if (error) throw createError({ statusCode: 500, statusMessage: error.message })
+  if (reqErr) throw createError({ statusCode: 500, statusMessage: reqErr.message })
 
-  // optional: call RPC/dashboard stats using admin client; adjust if you don't have RPC
-  const { data: stats, error: statsErr } = await admin.rpc('dashboard_stats')
-  if (statsErr) {
-    // not fatal — return pending anyway and log if needed
-    console.warn('dashboard_stats RPC error:', statsErr)
+  // optional stats RPC (uncomment if you have it)
+  // const { data: stats, error: statsErr } = await admin.rpc('dashboard_stats')
+  // if (statsErr) console.warn('dashboard_stats RPC error:', statsErr)
+
+  return {
+    requests: requests ?? [],
+    // stats: stats ?? null
   }
-
-  return { pending, stats }
 })
