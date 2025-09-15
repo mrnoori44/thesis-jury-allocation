@@ -1,6 +1,6 @@
 // server/api/auth/finalize.post.ts
 import { defineEventHandler, createError } from 'h3'
-import { serverSupabaseClient } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '~~/types/database.types' // adjust if needed
 
@@ -9,12 +9,10 @@ export default defineEventHandler(async (event) => {
   // so it runs as the authenticated user (auth.uid() available).
   const supabase = serverSupabaseClient(event) as unknown as SupabaseClient<Database>
 
-  // get authenticated user
-  const { data: userData, error: userErr } = await supabase.auth.getUser()
-  if (userErr || !userData?.user) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthenticated' })
-  }
-  const user = userData.user
+  // 1) Auth via cookies (Nuxt helper)
+  const user = await serverSupabaseUser(event)
+  if (!user) throw createError({ statusCode: 401, statusMessage: 'Unauthenticated' })
+
   const userEmail = (user.email || '').toLowerCase()
   const userId = user.id
 
