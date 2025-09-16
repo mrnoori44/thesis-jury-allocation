@@ -70,6 +70,10 @@
           <div class="text-2xl font-bold mt-2">{{ stats.professors ?? "—" }}</div>
         </div>
       </section>
+      <section class="bg-white shadow rounded p-4 mb-6">
+        <h2 class="text-lg font-semibold mb-3">ایجاد حساب استاد</h2>
+        <ProfessorCreateForm @created="handleProfessorCreated" />
+      </section>
     </div>
   </div>
 </template>
@@ -77,6 +81,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import ProfessorCreateForm from "~/components/ProfessorCreateForm.vue";
 
 type RequestRow = {
   id: number;
@@ -153,6 +158,11 @@ async function rejectRequest(id: number | string) {
   }
 }
 
+function handleProfessorCreated(e: { profileId: string; userId: string }) {
+  console.log("Professor created:", e);
+  // Optional: if you want to refresh any lists:
+  // await fetchPending?.()
+}
 onMounted(() => {
   fetchPending();
 });
