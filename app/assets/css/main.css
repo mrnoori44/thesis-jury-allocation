@@ -4,22 +4,7 @@
 @theme {
     --font-sans: 'Vazirmatn', sans-serif;
   }
-/* Vazir Matn font faces */
-@font-face {
-    font-family: "VazirMatn";
-    src: url("/thesis-jury-allocation/public/fonts/Vazirmatn-Regular.woff2") format("woff2");
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-  }
-  
-  @font-face {
-    font-family: "VazirMatn";
-    src: url("/thesis-jury-allocation/public/fonts/Vazirmatn-Bold.woff2") format("woff2");
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
-  }
+
   /* Apply globally */
   html, body {
     font-family: "VazirMatn", sans-serif;
