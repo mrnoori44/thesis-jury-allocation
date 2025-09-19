@@ -7,7 +7,7 @@ import type { Database } from '~~/types/database.types' // adjust if needed
 export default defineEventHandler(async (event) => {
   // serverSupabaseClient(event) binds to the session cookie sent by the client,
   // so it runs as the authenticated user (auth.uid() available).
-  const supabase = serverSupabaseClient(event) as unknown as SupabaseClient<Database>
+  const supabase = await serverSupabaseClient(event) as unknown as SupabaseClient<Database>
 
   // 1) Auth via cookies (Nuxt helper)
   const user = await serverSupabaseUser(event)
@@ -45,7 +45,7 @@ export default defineEventHandler(async (event) => {
   // create profile row with the data from the signup_request (or with defaults)
   const profilePayload: Database['public']['Tables']['profiles']['Insert'] = {
     id: userId,
-    full_name: req?.full_name ?? null,
+    full_name: req?.full_name,
     role: 'student',
     student_number: req?.student_number ?? null,
     professor_number: null,

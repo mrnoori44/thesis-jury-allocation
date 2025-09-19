@@ -336,6 +336,9 @@ async function submit() {
     const { data: signData, error: signErr } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
+      options: {
+        data: { full_name: form.full_name, student_number: form.student_number }, // <- goes into user_metadata
+      },
     });
 
     if (signErr) {
