@@ -233,96 +233,139 @@
           >
             <div class="flex items-center justify-between">
               <h3 class="text-base font-extrabold text-slate-800">درخواست‌های ورودی</h3>
-              <div class="text-xs text-slate-500">
-                (فقط نمایش نمونه — بدون اتصال سرور)
+              <div class="flex items-center gap-2">
+                <button
+                  @click="refreshIncoming()"
+                  class="text-sm rounded-xl border border-slate-200 px-3 py-1.5 text-slate-700 hover:bg-slate-50"
+                >
+                  به‌روزرسانی
+                </button>
+                <div class="text-xs text-slate-500" v-if="incomingPending">
+                  در حال بارگذاری…
+                </div>
               </div>
             </div>
 
-            <!-- Table (md+) -->
-            <div
-              class="mt-4 hidden md:block overflow-hidden rounded-2xl border border-slate-100"
+            <p v-if="incomingError" class="mt-3 text-rose-600 text-sm">
+              خطا در دریافت درخواست‌ها
+            </p>
+            <p
+              v-else-if="!incoming.length && !incomingPending"
+              class="mt-3 text-slate-500 text-sm"
             >
-              <table class="w-full text-sm rtl text-right">
-                <thead class="bg-slate-50 text-slate-600">
-                  <tr>
-                    <th class="px-4 py-3 font-medium">عنوان پایان‌نامه</th>
-                    <th class="px-4 py-3 font-medium">دانشجو</th>
-                    <th class="px-4 py-3 font-medium">رشته</th>
-                    <th class="px-4 py-3 font-medium">تاریخ درخواست</th>
-                    <th class="px-4 py-3 font-medium">عملیات</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 bg-white">
-                  <tr v-for="req in incoming" :key="req.id">
-                    <td class="px-4 py-3 align-top">
-                      <div class="font-medium text-slate-800">{{ req.title }}</div>
-                      <div class="text-xs text-slate-500">
-                        کلیدواژه‌ها: {{ req.keywords.join("، ") }}
-                      </div>
-                    </td>
-                    <td class="px-4 py-3 text-slate-700">{{ req.student }}</td>
-                    <td class="px-4 py-3 text-slate-600">{{ req.field }}</td>
-                    <td class="px-4 py-3 text-slate-600">{{ req.createdAt }}</td>
-                    <td class="px-4 py-3">
-                      <div class="flex items-center gap-2">
-                        <button
-                          @click="openDetails(req)"
-                          class="px-3 py-1.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50"
-                        >
-                          جزئیات
-                        </button>
-                        <button
-                          @click="openDecision(req, 'accept')"
-                          class="px-3 py-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700"
-                        >
-                          پذیرش
-                        </button>
-                        <button
-                          @click="openDecision(req, 'reject')"
-                          class="px-3 py-1.5 rounded-xl bg-rose-600 text-white hover:bg-rose-700"
-                        >
-                          رد
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+              درخواستی موجود نیست.
+            </p>
 
-            <!-- Cards (mobile) -->
-            <div class="mt-4 md:hidden space-y-3">
+            <!-- Content when we have data -->
+            <div v-else>
+              <!-- Table (md+) -->
+
               <div
-                v-for="req in incoming"
-                :key="req.id"
-                class="rounded-2xl border border-slate-100 bg-white p-4"
+                class="mt-4 hidden md:block overflow-hidden rounded-2xl border border-slate-100"
               >
-                <div class="font-semibold text-slate-800">{{ req.title }}</div>
-                <div class="text-xs text-slate-500 mt-1">
-                  دانشجو: {{ req.student }} — رشته: {{ req.field }}
-                </div>
-                <div class="text-xs text-slate-500 mt-1">
-                  کلیدواژه‌ها: {{ req.keywords.join("، ") }}
-                </div>
-                <div class="mt-3 flex items-center gap-2">
-                  <button
-                    @click="openDetails(req)"
-                    class="px-3 py-1.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50"
-                  >
-                    جزئیات
-                  </button>
-                  <button
-                    @click="openDecision(req, 'accept')"
-                    class="px-3 py-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700"
-                  >
-                    پذیرش
-                  </button>
-                  <button
-                    @click="openDecision(req, 'reject')"
-                    class="px-3 py-1.5 rounded-xl bg-rose-600 text-white hover:bg-rose-700"
-                  >
-                    رد
-                  </button>
+                <table class="w-full text-sm rtl text-right">
+                  <thead class="bg-slate-50 text-slate-600">
+                    <tr>
+                      <th class="px-4 py-3 font-medium">عنوان پایان‌نامه</th>
+                      <th class="px-4 py-3 font-medium">دانشجو</th>
+                      <th class="px-4 py-3 font-medium">حوزه</th>
+                      <th class="px-4 py-3 font-medium">تاریخ دعوت</th>
+                      <th class="px-4 py-3 font-medium">وضعیت</th>
+                      <th class="px-4 py-3 font-medium">عملیات</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 bg-white">
+                    <tr v-for="req in incoming" :key="req.allocation_id">
+                      <td class="px-4 py-3 align-top">
+                        <div class="font-medium text-slate-800">{{ req.title }}</div>
+                        <div class="text-xs text-slate-500">
+                          محل پیشنهادی: {{ req.proposed_location || "—" }}
+                        </div>
+                      </td>
+                      <td class="px-4 py-3 text-slate-700">
+                        {{ req.student_name || "—" }}
+                      </td>
+                      <td class="px-4 py-3 text-slate-600">{{ req.field }}</td>
+                      <td class="px-4 py-3 text-slate-600">
+                        {{ toFaDateTime(req.invited_at) }}
+                      </td>
+                      <td class="px-4 py-3">
+                        <span
+                          class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium"
+                          :class="chip(req.status)"
+                        >
+                          <span
+                            class="h-2 w-2 rounded-full"
+                            :class="dot(req.status)"
+                          ></span>
+                          {{ statusText(req.status) }}
+                        </span>
+                      </td>
+                      <td class="px-4 py-3">
+                        <div class="flex items-center gap-2">
+                          <button
+                            @click="openDetails(req)"
+                            class="px-3 py-1.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50"
+                          >
+                            جزئیات
+                          </button>
+                          <button
+                            v-if="req.status === 'invited'"
+                            @click="openDecision(req, 'accept')"
+                            class="px-3 py-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700"
+                          >
+                            پذیرش
+                          </button>
+                          <button
+                            v-if="req.status === 'invited'"
+                            @click="openDecision(req, 'reject')"
+                            class="px-3 py-1.5 rounded-xl bg-rose-600 text-white hover:bg-rose-700"
+                          >
+                            رد
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Cards (mobile) -->
+              <div class="mt-4 md:hidden space-y-3">
+                <div
+                  v-for="req in incoming"
+                  :key="req.allocation_id"
+                  class="rounded-2xl border border-slate-100 bg-white p-4"
+                >
+                  <div class="font-semibold text-slate-800">{{ req.title }}</div>
+                  <div class="text-xs text-slate-500 mt-1">
+                    دانشجو: {{ req.student_name || "—" }} — حوزه: {{ req.field }}
+                  </div>
+                  <div class="text-xs text-slate-500 mt-1">
+                    دعوت: {{ toFaDateTime(req.invited_at) }}
+                  </div>
+                  <div class="mt-3 flex items-center gap-2">
+                    <button
+                      @click="openDetails(req)"
+                      class="px-3 py-1.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50"
+                    >
+                      جزئیات
+                    </button>
+                    <button
+                      v-if="req.status === 'invited'"
+                      @click="openDecision(req, 'accept')"
+                      class="px-3 py-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700"
+                    >
+                      پذیرش
+                    </button>
+                    <button
+                      v-if="req.status === 'invited'"
+                      @click="openDecision(req, 'reject')"
+                      class="px-3 py-1.5 rounded-xl bg-rose-600 text-white hover:bg-rose-700"
+                    >
+                      رد
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -354,27 +397,34 @@
           </div>
           <div class="rounded-2xl border border-slate-100 p-4">
             <div class="text-slate-500">دانشجو</div>
-            <div class="font-semibold text-slate-800">{{ selected?.student }}</div>
+            <div class="font-semibold text-slate-800">
+              {{ selected?.student_name || "—" }}
+            </div>
           </div>
           <div class="rounded-2xl border border-slate-100 p-4">
-            <div class="text-slate-500">رشته</div>
+            <div class="text-slate-500">حوزه</div>
             <div class="font-semibold text-slate-800">{{ selected?.field }}</div>
           </div>
           <div class="rounded-2xl border border-slate-100 p-4">
-            <div class="text-slate-500">پنجره دفاع پیشنهادی</div>
-            <div class="font-semibold text-slate-800">{{ selected?.window }}</div>
+            <div class="text-slate-500">تاریخ دعوت</div>
+            <div class="font-semibold text-slate-800">
+              {{ toFaDateTime(selected?.invited_at) }}
+            </div>
           </div>
         </div>
         <div class="mt-4">
-          <div class="text-slate-500 text-sm">خلاصه</div>
-          <p class="text-slate-700 text-sm leading-7 mt-1">{{ selected?.abstract }}</p>
+          <div class="text-slate-500 text-sm">چکیده</div>
+          <p class="text-slate-700 text-sm leading-7 mt-1">
+            {{ selected?.abstract || "—" }}
+          </p>
         </div>
         <div class="mt-6 flex items-center justify-end gap-2">
           <NuxtLink
-            :to="`/professor/requests/${selected?.id}`"
+            :to="`/professor/requests/${selected?.thesis_id}`"
             class="px-4 py-2 rounded-2xl border border-slate-300 text-slate-700 hover:bg-slate-50"
-            >رفتن به صفحه درخواست</NuxtLink
           >
+            رفتن به صفحه درخواست
+          </NuxtLink>
           <button
             @click="detailsOpen = false"
             class="px-4 py-2 rounded-2xl bg-indigo-600 text-white hover:bg-indigo-700"
@@ -385,7 +435,7 @@
       </div>
     </div>
 
-    <!-- Decision Modal (Accept/Reject) UI only -->
+    <!-- Decision Modal -->
     <div v-if="decisionOpen" class="fixed inset-0 z-50 flex items-center justify-center">
       <div class="absolute inset-0 bg-black/50" @click="decisionOpen = false"></div>
       <div
@@ -408,9 +458,7 @@
         </p>
 
         <div v-if="decisionType === 'reject'" class="mt-4">
-          <label class="block text-sm mb-1 text-slate-700"
-            >دلیل رد (اختیاری ولی توصیه‌شده)</label
-          >
+          <label class="block text-sm mb-1 text-slate-700">دلیل رد (اختیاری)</label>
           <textarea
             v-model="rejectReason"
             rows="4"
@@ -427,6 +475,8 @@
             انصراف
           </button>
           <button
+            :disabled="actionPending"
+            @click="confirmDecision"
             class="px-4 py-2 rounded-2xl"
             :class="
               decisionType === 'accept'
@@ -434,7 +484,13 @@
                 : 'bg-rose-600 text-white hover:bg-rose-700'
             "
           >
-            {{ decisionType === "accept" ? "تایید پذیرش" : "تایید رد" }}
+            {{
+              actionPending
+                ? "در حال ارسال…"
+                : decisionType === "accept"
+                ? "تایید پذیرش"
+                : "تایید رد"
+            }}
           </button>
         </div>
       </div>
@@ -447,11 +503,10 @@
 </template>
 
 <script setup lang="ts">
-// UI-only Professor Dashboard with sample data
-import { ref } from "vue";
+definePageMeta({ middleware: "auth-professor" as any });
 useHead({ title: "داشبورد استاد", htmlAttrs: { lang: "fa", dir: "rtl" } });
 
-// Profile form (UI)
+// --- UI-only profile left as-is ---
 const universities = [
   "دانشگاه تهران",
   "دانشگاه صنعتی اصفهان",
@@ -459,7 +514,6 @@ const universities = [
   "دانشگاه تبریز",
 ];
 const departments = ["مهندسی کامپیوتر", "مهندسی صنایع", "مهندسی برق", "مدیریت فناوری"];
-
 const profile = ref({
   fullName: "دکتر الهام رحیمی",
   email: "e.rahimi@university.ac.ir",
@@ -480,48 +534,112 @@ function removeTopic(i: number) {
   topics.value.splice(i, 1);
 }
 
-// Incoming requests (UI)
-const incoming = ref([
-  {
-    id: "p_req_01",
-    title: "زمان‌بندی مقاوم جلسات دفاع با محدودیت منابع",
-    student: "فاطمه عباسی",
-    field: "مهندسی صنایع",
-    createdAt: "۱۴۰۴/۰۶/۲۵",
-    keywords: ["زمان‌بندی", "بهینه‌سازی", "ژنتیک"],
-    window: "۱۴۰۴/۰۷/۱۰ تا ۱۴۰۴/۰۷/۲۰",
-    abstract:
-      "در این پژوهش چارچوبی برای زمان‌بندی جلسات دفاع ارائه می‌شود که تداخل‌ها را با استفاده از الگوریتم‌های فراابتکاری کاهش می‌دهد.",
-  },
-  {
-    id: "p_req_02",
-    title: "تشخیص گفتار فارسی با مدل‌های بنیادین",
-    student: "علی کریمی",
-    field: "مهندسی کامپیوتر",
-    createdAt: "۱۴۰۴/۰۶/۲۲",
-    keywords: ["گفتار", "مدل بنیادین", "یادگیری ماشین"],
-    window: "۱۴۰۴/۰۷/۰۵ تا ۱۴۰۴/۰۷/۱۲",
-    abstract:
-      "کار حاضر به ارزیابی مدل‌های بنیادین چندزبانه برای بهبود دقت تشخیص گفتار فارسی می‌پردازد.",
-  },
-]);
+// --- Incoming invitations (real) ---
+type IncomingItem = {
+  allocation_id: string;
+  thesis_id: string;
+  status: "invited" | "accepted" | "declined" | "expired" | string;
+  invited_at: string | null;
+  responded_at: string | null;
+  title: string;
+  field: string;
+  abstract: string | null;
+  created_at: string | null;
+  proposed_date: string | null;
+  proposed_location: string | null;
+  student_name: string | null;
+};
+type IncomingResp = { ok: boolean; data: IncomingItem[] };
 
-// Modals
+const {
+  data: incomingRes,
+  pending: incomingPending,
+  error: incomingError,
+  refresh: refreshIncoming,
+} = await useFetch<IncomingResp>("/api/professor/incoming", { method: "GET" });
+
+const incoming = computed(() => incomingRes.value?.data ?? []);
+
+// --- Decision modal state & actions ---
 const detailsOpen = ref(false);
 const decisionOpen = ref(false);
-const selected = ref<any>(null);
+const selected = ref<IncomingItem | null>(null);
 const decisionType = ref<"accept" | "reject" | "none">("none");
-const rejectReason = ref("");
+const rejectReason = ref(""); // currently not sent; add to decline API if you add a column
+const actionPending = ref(false);
 
-function openDetails(req: any) {
+function openDetails(req: IncomingItem) {
   selected.value = req;
   detailsOpen.value = true;
 }
-function openDecision(req: any, type: "accept" | "reject") {
+function openDecision(req: IncomingItem, type: "accept" | "reject") {
   selected.value = req;
   decisionType.value = type;
   rejectReason.value = "";
   decisionOpen.value = true;
+}
+
+async function confirmDecision() {
+  if (!selected.value) return;
+  actionPending.value = true;
+  try {
+    if (decisionType.value === "accept") {
+      await $fetch(`/api/professor/allocations/${selected.value.allocation_id}/accept`, {
+        method: "POST",
+      });
+    } else {
+      await $fetch(`/api/professor/allocations/${selected.value.allocation_id}/decline`, {
+        method: "POST",
+      });
+      // if you add a "note" column later, send body: { reason: rejectReason.value }
+    }
+    decisionOpen.value = false;
+    await refreshIncoming();
+  } catch (e: any) {
+    // optional: toast; for now just close modal
+    decisionOpen.value = false;
+  } finally {
+    actionPending.value = false;
+  }
+}
+
+// --- helpers ---
+function toFaDateTime(iso?: string | null) {
+  if (!iso) return "—";
+  try {
+    return new Intl.DateTimeFormat("fa-IR", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date(iso));
+  } catch {
+    return iso;
+  }
+}
+function statusText(s?: string) {
+  switch (s) {
+    case "invited":
+      return "در انتظار پاسخ";
+    case "accepted":
+      return "پذیرفته شد";
+    case "declined":
+      return "رد شد";
+    case "expired":
+      return "منقضی";
+    default:
+      return s || "";
+  }
+}
+function chip(s: string) {
+  if (s === "accepted") return "bg-emerald-50 text-emerald-700 border border-emerald-200";
+  if (s === "declined") return "bg-rose-50 text-rose-700 border border-rose-200";
+  if (s === "expired") return "bg-slate-50 text-slate-600 border border-slate-200";
+  return "bg-indigo-50 text-indigo-700 border border-indigo-200";
+}
+function dot(s: string) {
+  if (s === "accepted") return "bg-emerald-600";
+  if (s === "declined") return "bg-rose-600";
+  if (s === "expired") return "bg-slate-500";
+  return "bg-indigo-600";
 }
 </script>
 

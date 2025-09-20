@@ -329,8 +329,7 @@ function dotClass(s: string) {
 
 // Placeholder action; wire to allocation modal/page later
 function openAllocation(req: any) {
-  // For MVP, navigate to request details where allocations are shown
-  navigateTo(`/student/requests/${req.id}`);
+  navigateTo(`/student/requests/${req.id}/jury`);
 }
 
 // Refresh both sections

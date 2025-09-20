@@ -278,7 +278,7 @@ async function submit() {
 
     if (role === "student") {
       if (approved) {
-        router.push("/student/index");
+        router.push("/student");
       } else {
         // Not approved yet: sign out and show an informational message.
         await supabase.auth.signOut();
