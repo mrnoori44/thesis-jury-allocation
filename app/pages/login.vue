@@ -1,46 +1,194 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-slate-50 rtl p-6">
-    <div class="w-full max-w-md bg-white rounded shadow p-6">
-      <h1 class="text-2xl font-semibold mb-4 text-right">ورود</h1>
+  <div
+    class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 relative overflow-hidden rtl"
+    dir="rtl"
+  >
+    <!-- Decorative, ultra‑light blobs -->
+    <div
+      aria-hidden="true"
+      class="pointer-events-none select-none absolute -top-24 -right-24 h-[26rem] w-[26rem] rounded-full bg-indigo-200/30 blur-3xl"
+    ></div>
+    <div
+      aria-hidden="true"
+      class="pointer-events-none select-none absolute -bottom-24 -left-24 h-[22rem] w-[22rem] rounded-full bg-fuchsia-200/25 blur-3xl"
+    ></div>
 
-      <form @submit.prevent="submit" class="space-y-4">
-        <div>
-          <label class="text-sm block mb-1">ایمیل</label>
-          <input
-            v-model="form.email"
-            type="email"
-            required
-            class="w-full border rounded px-3 py-2"
-            placeholder="example@uni.edu"
-          />
+    <!-- Header -->
+    <header class="max-w-6xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between">
+      <NuxtLink to="/" class="flex items-center gap-3">
+        <div
+          class="h-10 w-10 rounded-xl bg-indigo-600 text-white font-bold grid place-items-center shadow-sm"
+        >
+          دا
         </div>
+        <span class="text-slate-700 font-semibold hidden sm:block"
+          >سامانه تخصیص داور</span
+        >
+      </NuxtLink>
+      <nav class="text-sm text-slate-600 hidden sm:block">
+        حساب ندارید؟
+        <NuxtLink to="/signup" class="text-indigo-600 hover:text-indigo-700 font-semibold"
+          >ثبت‌نام</NuxtLink
+        >
+      </nav>
+    </header>
 
-        <div>
-          <label class="text-sm block mb-1">رمز عبور</label>
-          <input
-            v-model="form.password"
-            type="password"
-            required
-            class="w-full border rounded px-3 py-2"
-            placeholder="رمز عبور"
-          />
-        </div>
+    <!-- Auth card -->
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+        <!-- Slogan / feature side (hidden on small) -->
+        <section class="hidden lg:block">
+          <Transition name="fade" appear>
+            <div
+              class="rounded-3xl bg-white/60 backdrop-blur p-8 shadow-sm border border-slate-100"
+            >
+              <h1 class="text-2xl font-extrabold text-slate-800 leading-[1.6]">
+                سامانه تخصیص داور برای جلسات دفاع پایان نامه
+              </h1>
+              <p class="mt-4 text-slate-600 leading-7">
+                ورود اعضا برای مدیریت دعوت داوران، هماهنگی تقویم دفاع و مشاهده وضعیت
+                پرونده‌ها. سبک، سریع و سازگار با موبایل.
+              </p>
+              <ul class="mt-6 space-y-3 text-slate-700">
+                <li class="flex items-start gap-3">
+                  <span class="i">✔</span><span>تطبیق هوشمند تخصص با موضوع دفاع</span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span class="i">✔</span><span>هماهنگی زمان بدون تداخل</span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span class="i">✔</span><span>داشبورد گزارش‌های دانشگاهی</span>
+                </li>
+              </ul>
+            </div>
+          </Transition>
+        </section>
 
-        <div class="flex items-center justify-between">
-          <button
-            :disabled="loading"
-            type="submit"
-            class="px-4 py-2 bg-blue-600 text-white rounded"
+        <!-- Form side (uses your existing script & submit handler) -->
+        <section>
+          <div
+            class="rounded-3xl bg-white/70 backdrop-blur p-6 sm:p-8 shadow-sm border border-slate-100"
           >
-            ورود
-          </button>
-          <div v-if="loading" class="text-sm text-gray-500">در حال ورود...</div>
-        </div>
+            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800">
+              ورود به سامانه
+            </h2>
+            <p class="mt-2 text-slate-600 text-sm">
+              لطفاً ایمیل دانشگاهی و گذرواژه خود را وارد کنید.
+            </p>
 
-        <div v-if="error" class="text-sm text-red-600 mt-2">{{ error }}</div>
-        <div v-if="info" class="text-sm text-blue-600 mt-2">{{ info }}</div>
-      </form>
-    </div>
+            <form @submit.prevent="submit" class="mt-6 space-y-4">
+              <div>
+                <label class="text-sm block mb-1 text-slate-700">ایمیل</label>
+                <div class="relative">
+                  <input
+                    v-model="form.email"
+                    type="email"
+                    required
+                    class="w-full rounded-2xl border-slate-300/80 focus:border-indigo-500 focus:ring-indigo-500 px-4 py-3 pr-10 bg-white/90"
+                    placeholder="example@university.ac.ir"
+                  />
+                  <svg
+                    class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <path d="M4 8l8 5 8-5" />
+                    <path d="M4 8v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
+                  </svg>
+                </div>
+              </div>
+
+              <div>
+                <label class="text-sm block mb-1 text-slate-700">رمز عبور</label>
+                <div class="relative">
+                  <input
+                    v-model="form.password"
+                    type="password"
+                    required
+                    class="w-full rounded-2xl border-slate-300/80 focus:border-indigo-500 focus:ring-indigo-500 px-4 py-3 pr-10 bg-white/90"
+                    placeholder="••••••••"
+                  />
+                  <svg
+                    class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <path d="M5 12h14" />
+                    <path d="M12 5v14" />
+                  </svg>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between">
+                <label class="flex items-center gap-2 text-sm text-slate-600 select-none">
+                  <input
+                    type="checkbox"
+                    class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  مرا به خاطر بسپار
+                </label>
+                <NuxtLink
+                  to="/forgot"
+                  class="text-sm text-indigo-600 hover:text-indigo-700"
+                  >فراموشی گذرواژه</NuxtLink
+                >
+              </div>
+
+              <button
+                :disabled="loading"
+                type="submit"
+                class="w-full rounded-2xl bg-indigo-600 text-white py-3 font-semibold hover:bg-indigo-700 active:scale-[.99] transition shadow disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <span v-if="!loading">ورود</span>
+                <span v-else class="inline-flex items-center gap-2">
+                  <svg
+                    class="animate-spin h-5 w-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <circle cx="12" cy="12" r="9" opacity=".25" />
+                    <path d="M21 12a9 9 0 0 1-9 9" />
+                  </svg>
+                  در حال ورود...
+                </span>
+              </button>
+
+              <p class="text-center text-sm text-slate-600">
+                حساب ندارید؟
+                <NuxtLink
+                  to="/signup"
+                  class="text-indigo-600 hover:text-indigo-700 font-semibold"
+                  >ثبت‌نام</NuxtLink
+                >
+              </p>
+
+              <div
+                v-if="error"
+                class="text-sm mt-2 rounded-xl border border-red-200 bg-red-50 text-red-700 p-3"
+              >
+                {{ error }}
+              </div>
+              <div
+                v-if="info"
+                class="text-sm mt-2 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 p-3"
+              >
+                {{ info }}
+              </div>
+            </form>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="text-center text-xs text-slate-500 pb-8 px-4">
+      <p>© {{ new Date().getFullYear() }} سامانه تخصیص داور — همه حقوق محفوظ است.</p>
+    </footer>
   </div>
 </template>
 
@@ -166,5 +314,16 @@ async function submit() {
 <style scoped>
 .rtl {
   direction: rtl;
+}
+.fade-enter-active {
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.fade-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.fade-enter-to {
+  opacity: 1;
+  transform: translateY(0);
 }
 </style>
